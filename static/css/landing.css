@@ -1,0 +1,203 @@
+.hero {
+    display: block;
+    max-width: none;
+    padding: 3.5rem 2rem 5rem;
+    background: #fff;
+    text-align: center;
+}
+
+.hero-inner {
+    max-width: 980px;
+    margin: 0 auto;
+}
+
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    background: #e4f7f3;
+    border: 1px solid #c8ebe4;
+    color: #164e49;
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    padding: 0.65rem 1.45rem;
+    border-radius: 999px;
+    margin-bottom: 4.25rem;
+}
+
+.hero-badge-dot {
+    width: 0.65rem;
+    height: 0.65rem;
+    background: #20a383;
+    border-radius: 50%;
+}
+
+.hero-title {
+    font-family: var(--font-body);
+    font-size: clamp(3.25rem, 6vw, 5.25rem);
+    font-weight: 500;
+    line-height: 1.08;
+    letter-spacing: -0.055em;
+    color: #090909;
+    margin-bottom: 2.5rem;
+}
+
+.hero-title em {
+    font-style: normal;
+    color: #20a383;
+}
+
+.hero-subtitle {
+    max-width: none;
+    margin: 0 auto 3.5rem;
+    color: #505050;
+    font-size: clamp(1.15rem, 2vw, 1.6rem);
+    line-height: 1.55;
+}
+
+.hero-actions {
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 5.5rem;
+}
+
+.hero-actions .btn-primary,
+.hero-actions .btn-ghost {
+    min-width: 367px;
+    padding: 1.1rem 2rem;
+    border-radius: 1rem;
+    background: #101010;
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 600;
+    border: 0;
+}
+
+.hero-actions .btn-primary:hover,
+.hero-actions .btn-ghost:hover {
+    background: #2b2b2b;
+    color: #fff;
+}
+
+.hero-dashboard {
+    width: min(1120px, 100%);
+    margin: 0 auto;
+    padding: 2.1rem 2rem 2rem;
+    background: #f8f8f8;
+    border: 1px solid #e4e4e4;
+    border-radius: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    text-align: left;
+}
+
+.dashboard-window-bar {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.9rem;
+}
+
+.window-dot {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+}
+
+.window-dot-red { background: #ee9da4; }
+.window-dot-yellow { background: #f4c45d; }
+.window-dot-green { background: #91dbc8; }
+
+.dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.3rem;
+    margin-bottom: 1.3rem;
+}
+
+.dashboard-stat,
+.dashboard-bars {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 1.25rem;
+}
+
+.dashboard-stat {
+    min-height: 150px;
+    padding: 1.8rem 2rem;
+}
+
+.dashboard-label,
+.dashboard-change {
+    display: block;
+    color: #858585;
+    font-size: 1.1rem;
+}
+
+.dashboard-stat strong {
+    display: block;
+    margin: 0.75rem 0 0.5rem;
+    color: #111;
+    font-size: 2rem;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.dashboard-change-red { color: #bd5558; }
+.dashboard-change-green { color: #299a7d; }
+
+.dashboard-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    padding: 1.8rem 2rem;
+}
+
+.dashboard-bar-row {
+    display: grid;
+    grid-template-columns: 5rem 1fr;
+    align-items: center;
+    gap: 1rem;
+    color: #444;
+    font-size: 1.15rem;
+}
+
+.dashboard-bar-track {
+    height: 1rem;
+    background: #f0f1ed;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.dashboard-bar {
+    height: 100%;
+    border-radius: inherit;
+}
+
+.dashboard-bar-food { width: 76%; background: #e9a126; }
+.dashboard-bar-travel { width: 52%; background: #3989d0; }
+.dashboard-bar-bills { width: 39%; background: #7769c8; }
+
+@media (max-width: 900px) {
+    .hero { padding-top: 2.5rem; }
+    .hero-badge { margin-bottom: 2.75rem; }
+    .hero-actions .btn-primary,
+    .hero-actions .btn-ghost { min-width: 0; }
+    .hero-dashboard { padding-inline: 1.25rem; }
+}
+
+@media (max-width: 600px) {
+    .hero { padding: 2rem 1rem 3rem; }
+    .hero-badge { font-size: 0.8rem; padding-inline: 1rem; }
+    .hero-title { font-size: clamp(2.5rem, 12vw, 4rem); }
+    .hero-copy-break { display: none; }
+    .hero-actions { flex-direction: column; gap: 0.75rem; margin-bottom: 3.5rem; }
+    .hero-actions .btn-primary,
+    .hero-actions .btn-ghost { width: 100%; font-size: 1rem; }
+    .dashboard-stats { grid-template-columns: 1fr; }
+    .dashboard-stat { min-height: auto; }
+    .dashboard-label,
+    .dashboard-change,
+    .dashboard-bar-row { font-size: 0.9rem; }
+    .dashboard-stat strong { font-size: 1.6rem; }
+}
