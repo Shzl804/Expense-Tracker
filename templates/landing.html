@@ -21,7 +21,7 @@
         </p>
         <div class="hero-actions">
             <a href="{{ url_for('register') }}" class="btn-primary">Create free account</a>
-            <a href="{{ url_for('login') }}" class="btn-ghost">See how it works</a>
+            <button type="button" class="btn-ghost" id="open-video-modal" aria-haspopup="dialog">See how it works</button>
         </div>
     </div>
 
@@ -65,6 +65,23 @@
     </div>
 </section>
 
+<div class="video-modal" id="video-modal" role="dialog" aria-modal="true" aria-labelledby="video-modal-title" hidden>
+    <div class="video-modal-dialog">
+        <div class="video-modal-header">
+            <h2 id="video-modal-title">See how Spendly works</h2>
+            <button type="button" class="video-modal-close" id="close-video-modal" aria-label="Close video">&times;</button>
+        </div>
+        <div class="video-modal-frame">
+            <iframe
+                id="video-modal-iframe"
+                title="Spendly overview video"
+                src=""
+                allow="autoplay; encrypted-media; picture-in-picture"
+                allowfullscreen></iframe>
+        </div>
+    </div>
+</div>
+
 <section class="features">
     <div class="features-inner">
         <div class="feature-card">
@@ -93,4 +110,43 @@
     </div>
 </section>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (() => {
+        const openButton = document.getElementById('open-video-modal');
+        const modal = document.getElementById('video-modal');
+        const closeButton = document.getElementById('close-video-modal');
+        const iframe = document.getElementById('video-modal-iframe');
+        const videoUrl = 'https://www.youtube.com/embed/dQw4w9WgXcQ';
+
+        const closeModal = () => {
+            modal.hidden = true;
+            iframe.src = '';
+            document.body.classList.remove('video-modal-open');
+        };
+
+        openButton.addEventListener('click', () => {
+            iframe.src = `${videoUrl}?autoplay=1&rel=0`;
+            modal.hidden = false;
+            document.body.classList.add('video-modal-open');
+            closeButton.focus();
+        });
+
+        closeButton.addEventListener('click', closeModal);
+
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !modal.hidden) {
+                closeModal();
+            }
+        });
+    })();
+</script>
 {% endblock %}
