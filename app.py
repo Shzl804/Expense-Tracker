@@ -93,7 +93,7 @@ def login():
     session.clear()
     session["user_id"] = user["id"]
     session["user_name"] = user["name"]
-    return redirect(url_for("landing"))
+    return redirect(url_for("profile"))
 
 
 @app.route("/terms")
@@ -118,7 +118,84 @@ def logout():
 
 @app.route("/profile")
 def profile():
-    return "Profile page — coming in Step 4"
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    profile_user = {
+        "initials": "DU",
+        "name": "Demo User",
+        "email": "demo@spendly.com",
+        "member_since": "January 2026",
+    }
+    summary_stats = [
+        {"label": "Total spent", "value": "PKR 18,240", "detail": "This month"},
+        {"label": "Transactions", "value": "34", "detail": "This month"},
+        {"label": "Top category", "value": "Food", "detail": "PKR 6,850 spent"},
+    ]
+    transactions = [
+        {
+            "date": "15 Jan 2026",
+            "description": "Weekly groceries",
+            "category": "Food",
+            "category_class": "food",
+            "amount": "PKR 2,450",
+        },
+        {
+            "date": "13 Jan 2026",
+            "description": "Electricity bill",
+            "category": "Bills",
+            "category_class": "bills",
+            "amount": "PKR 4,500",
+        },
+        {
+            "date": "11 Jan 2026",
+            "description": "Ride to work",
+            "category": "Transport",
+            "category_class": "transport",
+            "amount": "PKR 320",
+        },
+        {
+            "date": "09 Jan 2026",
+            "description": "Movie tickets",
+            "category": "Entertainment",
+            "category_class": "entertainment",
+            "amount": "PKR 1,500",
+        },
+    ]
+    category_breakdown = [
+        {
+            "category": "Food",
+            "category_class": "food",
+            "total": "PKR 6,850",
+            "progress_class": "profile-progress-100",
+        },
+        {
+            "category": "Bills",
+            "category_class": "bills",
+            "total": "PKR 4,500",
+            "progress_class": "profile-progress-66",
+        },
+        {
+            "category": "Shopping",
+            "category_class": "shopping",
+            "total": "PKR 2,800",
+            "progress_class": "profile-progress-41",
+        },
+        {
+            "category": "Entertainment",
+            "category_class": "entertainment",
+            "total": "PKR 1,500",
+            "progress_class": "profile-progress-22",
+        },
+    ]
+
+    return render_template(
+        "profile.html",
+        profile_user=profile_user,
+        summary_stats=summary_stats,
+        transactions=transactions,
+        category_breakdown=category_breakdown,
+    )
 
 
 @app.route("/expenses/add")

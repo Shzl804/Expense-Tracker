@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Profile — Spendly{% endblock %}
+
+{% block content %}
+<section class="profile-page" aria-labelledby="profile-page-title">
+    <div class="profile-container">
+        <header class="profile-header">
+            <div>
+                <p class="profile-eyebrow">Account overview</p>
+                <h1 class="profile-title" id="profile-page-title">Your profile</h1>
+                <p class="profile-intro">A quick look at your Spendly account and spending habits.</p>
+            </div>
+            <a class="profile-header-link" href="{{ url_for('logout') }}">Log out</a>
+        </header>
+
+        <section class="profile-user-card" aria-labelledby="account-details-title">
+            <div class="profile-avatar" aria-hidden="true">{{ profile_user.initials }}</div>
+            <div class="profile-user-details">
+                <p class="profile-section-label" id="account-details-title">Account details</p>
+                <h2 class="profile-user-name">{{ profile_user.name }}</h2>
+                <p class="profile-user-email">{{ profile_user.email }}</p>
+            </div>
+            <div class="profile-member-meta">
+                <span class="profile-meta-label">Member since</span>
+                <span class="profile-meta-value">{{ profile_user.member_since }}</span>
+            </div>
+        </section>
+
+        <section class="profile-stats" aria-label="Spending summary">
+            {% for stat in summary_stats %}
+            <article class="profile-stat-card">
+                <span class="profile-stat-label">{{ stat.label }}</span>
+                <strong class="profile-stat-value">{{ stat.value }}</strong>
+                <span class="profile-stat-detail">{{ stat.detail }}</span>
+            </article>
+            {% endfor %}
+        </section>
+
+        <div class="profile-content-grid">
+            <section class="profile-panel profile-transactions" aria-labelledby="transactions-title">
+                <div class="profile-panel-header">
+                    <div>
+                        <p class="profile-section-label">Recent activity</p>
+                        <h2 class="profile-panel-title" id="transactions-title">Transaction history</h2>
+                    </div>
+                    <span class="profile-panel-count">{{ transactions|length }} entries</span>
+                </div>
+                <div class="profile-table-scroll">
+                    <table class="profile-table">
+                        <caption class="sr-only">Recent transactions</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Date</th>
+                                <th scope="col">Description</th>
+                                <th scope="col">Category</th>
+                                <th scope="col" class="profile-amount-column">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in transactions %}
+                            <tr>
+                                <td class="profile-date">{{ transaction.date }}</td>
+                                <th scope="row" class="profile-description">{{ transaction.description }}</th>
+                                <td><span class="profile-category-badge profile-category-{{ transaction.category_class }}">{{ transaction.category }}</span></td>
+                                <td class="profile-amount-column profile-amount">{{ transaction.amount }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="profile-panel profile-breakdown" aria-labelledby="breakdown-title">
+                <div class="profile-panel-header">
+                    <div>
+                        <p class="profile-section-label">Where it goes</p>
+                        <h2 class="profile-panel-title" id="breakdown-title">Category breakdown</h2>
+                    </div>
+                </div>
+                <div class="profile-category-list">
+                    {% for item in category_breakdown %}
+                    <div class="profile-category-row">
+                        <div class="profile-category-heading">
+                            <span class="profile-category-name">
+                                <span class="profile-category-dot profile-category-{{ item.category_class }}" aria-hidden="true"></span>
+                                {{ item.category }}
+                            </span>
+                            <strong class="profile-category-total">{{ item.total }}</strong>
+                        </div>
+                        <div class="profile-progress-track" role="progressbar" aria-label="{{ item.category }} spending" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ item.progress_class|replace('profile-progress-', '') }}">
+                            <span class="profile-progress profile-category-{{ item.category_class }} {{ item.progress_class }}"></span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+    </div>
+</section>
+{% endblock %}
