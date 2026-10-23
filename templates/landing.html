@@ -10,11 +10,19 @@
 
 <section class="hero">
     <div class="hero-inner">
+        {% if session.get('user_id') %}
+        <div class="hero-badge"><span class="hero-badge-dot"></span>Welcome back</div>
+        <h1 class="hero-title">
+            Welcome back, {{ session.get('user_name') }}.<br>
+            <em>Know where your money goes.</em>
+        </h1>
+        {% else %}
         <div class="hero-badge"><span class="hero-badge-dot"></span>Free to use · No credit card needed</div>
         <h1 class="hero-title">
             Track every rupee.<br>
             <em>Know where it goes.</em>
         </h1>
+        {% endif %}
         <p class="hero-subtitle">
             Spendly helps you log expenses, spot patterns, and stay<br class="hero-copy-break">
             on budget — without the spreadsheet headache.
