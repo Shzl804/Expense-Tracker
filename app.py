@@ -1,11 +1,18 @@
 import os
 import secrets
 import sqlite3
+from datetime import datetime
 
 from flask import Flask, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from database.db import get_db, init_db, seed_db
+from database.queries import (
+    get_category_breakdown,
+    get_recent_transactions,
+    get_summary_stats,
+    get_user_by_id,
+)
 
 
 app = Flask(__name__)
@@ -118,74 +125,43 @@ def logout():
 
 @app.route("/profile")
 def profile():
-    if not session.get("user_id"):
+    user_id = session.get("user_id")
+    if not user_id:
         return redirect(url_for("login"))
 
+    user = get_user_by_id(user_id)
+    if user is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    summary = get_summary_stats(user_id)
+    transactions = [_format_transaction(item) for item in get_recent_transactions(user_id)]
+    raw_categories = get_category_breakdown(user_id)
+    category_breakdown = [_format_category(item) for item in raw_categories]
+    category_totals = {item["name"]: item["amount"] for item in raw_categories}
     profile_user = {
-        "initials": "DU",
-        "name": "Demo User",
-        "email": "demo@spendly.com",
-        "member_since": "January 2026",
+        **user,
+        "initials": _initials(user["name"]),
     }
     summary_stats = [
-        {"label": "Total spent", "value": "PKR 18,240", "detail": "This month"},
-        {"label": "Transactions", "value": "34", "detail": "This month"},
-        {"label": "Top category", "value": "Food", "detail": "PKR 6,850 spent"},
-    ]
-    transactions = [
         {
-            "date": "15 Jan 2026",
-            "description": "Weekly groceries",
-            "category": "Food",
-            "category_class": "food",
-            "amount": "PKR 2,450",
+            "label": "Total spent",
+            "value": _format_currency(summary["total_spent"]),
+            "detail": "All recorded expenses",
         },
         {
-            "date": "13 Jan 2026",
-            "description": "Electricity bill",
-            "category": "Bills",
-            "category_class": "bills",
-            "amount": "PKR 4,500",
+            "label": "Transactions",
+            "value": str(summary["transaction_count"]),
+            "detail": "All recorded expenses",
         },
         {
-            "date": "11 Jan 2026",
-            "description": "Ride to work",
-            "category": "Transport",
-            "category_class": "transport",
-            "amount": "PKR 320",
-        },
-        {
-            "date": "09 Jan 2026",
-            "description": "Movie tickets",
-            "category": "Entertainment",
-            "category_class": "entertainment",
-            "amount": "PKR 1,500",
-        },
-    ]
-    category_breakdown = [
-        {
-            "category": "Food",
-            "category_class": "food",
-            "total": "PKR 6,850",
-            "progress_class": "profile-progress-100",
-        },
-        {
-            "category": "Bills",
-            "category_class": "bills",
-            "total": "PKR 4,500",
-            "progress_class": "profile-progress-66",
-        },
-        {
-            "category": "Shopping",
-            "category_class": "shopping",
-            "total": "PKR 2,800",
-            "progress_class": "profile-progress-41",
-        },
-        {
-            "category": "Entertainment",
-            "category_class": "entertainment",
-            "total": "PKR 1,500",
-            "progress_class": "profile-progress-22",
+            "label": "Top category",
+            "value": summary["top_category"],
+            "detail": (
+                f"{_format_currency(category_totals[summary['top_category']])} spent"
+                if summary["top_category"] != "—"
+                else "No expenses yet"
+            ),
         },
     ]
 
@@ -196,6 +172,43 @@ def profile():
         transactions=transactions,
         category_breakdown=category_breakdown,
     )
+
+
+def _format_currency(amount):
+    return f"₹{amount:,.2f}"
+
+
+def _initials(name):
+    parts = name.split()
+    return "".join(part[0] for part in parts[:2]).upper()
+
+
+def _category_class(category):
+    return category.lower().replace(" ", "-")
+
+
+def _format_transaction(transaction):
+    try:
+        transaction_date = datetime.strptime(transaction["date"], "%Y-%m-%d")
+        display_date = transaction_date.strftime("%d %b %Y")
+    except (TypeError, ValueError):
+        display_date = transaction["date"]
+    return {
+        **transaction,
+        "date": display_date,
+        "category_class": _category_class(transaction["category"]),
+        "amount": _format_currency(transaction["amount"]),
+    }
+
+
+def _format_category(category):
+    return {
+        "category": category["name"],
+        "category_class": _category_class(category["name"]),
+        "total": _format_currency(category["amount"]),
+        "pct": category["pct"],
+        "progress_class": f"profile-progress-{round(category['pct'] / 5) * 5}",
+    }
 
 
 @app.route("/expenses/add")

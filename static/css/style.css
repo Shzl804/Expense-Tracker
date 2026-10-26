@@ -746,6 +746,14 @@ a { color: inherit; text-decoration: none; }
     font-weight: 600;
 }
 
+.profile-empty-state {
+    color: var(--ink-muted);
+    font-size: 0.85rem;
+    margin: 0;
+    padding: 1rem 0;
+    text-align: center;
+}
+
 .profile-category-badge {
     background: var(--accent-light);
     border-radius: 999px;
@@ -836,10 +844,27 @@ a { color: inherit; text-decoration: none; }
     background: var(--danger);
 }
 
+.profile-progress-0 { width: 0%; }
+.profile-progress-5 { width: 5%; }
+.profile-progress-10 { width: 10%; }
+.profile-progress-15 { width: 15%; }
+.profile-progress-20 { width: 20%; }
+.profile-progress-25 { width: 25%; }
+.profile-progress-30 { width: 30%; }
+.profile-progress-35 { width: 35%; }
+.profile-progress-40 { width: 40%; }
+.profile-progress-45 { width: 45%; }
+.profile-progress-50 { width: 50%; }
+.profile-progress-55 { width: 55%; }
+.profile-progress-60 { width: 60%; }
+.profile-progress-65 { width: 65%; }
+.profile-progress-70 { width: 70%; }
+.profile-progress-75 { width: 75%; }
+.profile-progress-80 { width: 80%; }
+.profile-progress-85 { width: 85%; }
+.profile-progress-90 { width: 90%; }
+.profile-progress-95 { width: 95%; }
 .profile-progress-100 { width: 100%; }
-.profile-progress-66 { width: 66%; }
-.profile-progress-41 { width: 41%; }
-.profile-progress-22 { width: 22%; }
 
 .sr-only {
     clip: rect(0, 0, 0, 0);
