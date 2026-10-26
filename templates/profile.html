@@ -65,6 +65,10 @@
                                 <td><span class="profile-category-badge profile-category-{{ transaction.category_class }}">{{ transaction.category }}</span></td>
                                 <td class="profile-amount-column profile-amount">{{ transaction.amount }}</td>
                             </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="profile-empty-state">No expenses recorded yet.</td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -88,10 +92,12 @@
                             </span>
                             <strong class="profile-category-total">{{ item.total }}</strong>
                         </div>
-                        <div class="profile-progress-track" role="progressbar" aria-label="{{ item.category }} spending" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ item.progress_class|replace('profile-progress-', '') }}">
+                        <div class="profile-progress-track" role="progressbar" aria-label="{{ item.category }} spending" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ item.pct }}">
                             <span class="profile-progress profile-category-{{ item.category_class }} {{ item.progress_class }}"></span>
                         </div>
                     </div>
+                    {% else %}
+                    <p class="profile-empty-state">Add an expense to see your category breakdown.</p>
                     {% endfor %}
                 </div>
             </section>
