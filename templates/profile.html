@@ -37,6 +37,18 @@
             {% endfor %}
         </section>
 
+        <section class="profile-filter" aria-labelledby="filter-title">
+            <h2 class="sr-only" id="filter-title">Filter by date</h2>
+            <form method="GET" action="{{ url_for('profile') }}" class="profile-filter-form">
+                <label for="start_date">From</label>
+                <input type="date" id="start_date" name="start_date" value="{{ start_date }}">
+                <label for="end_date">To</label>
+                <input type="date" id="end_date" name="end_date" value="{{ end_date }}">
+                <button type="submit">Filter</button>
+                <a href="{{ url_for('profile') }}">Clear</a>
+            </form>
+        </section>
+
         <div class="profile-content-grid">
             <section class="profile-panel profile-transactions" aria-labelledby="transactions-title">
                 <div class="profile-panel-header">

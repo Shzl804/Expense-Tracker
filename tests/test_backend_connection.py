@@ -151,7 +151,7 @@ def test_profile_renders_live_user_data(client, users):
     assert "Demo User" in page
     assert "demo@spendly.com" in page
     assert "January 2026" in page
-    assert "₹300.00" in page
+    assert "₨300.00" in page
     assert "Food" in page
     assert page.index("20 Jan 2026") < page.index("15 Jan 2026")
     assert "Private expense" not in page
@@ -166,6 +166,6 @@ def test_profile_renders_zero_safe_empty_state(client, users):
     page = response.get_data(as_text=True)
 
     assert response.status_code == 200
-    assert "₹0.00" in page
+    assert "₨0.00" in page
     assert "No expenses recorded yet." in page
     assert "Add an expense to see your category breakdown." in page

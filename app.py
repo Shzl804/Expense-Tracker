@@ -134,25 +134,52 @@ def profile():
         session.clear()
         return redirect(url_for("login"))
 
-    summary = get_summary_stats(user_id)
-    transactions = [_format_transaction(item) for item in get_recent_transactions(user_id)]
-    raw_categories = get_category_breakdown(user_id)
+    date_from = request.args.get("start_date")
+    date_to = request.args.get("end_date")
+
+    # Validate dates
+    try:
+        if date_from:
+            datetime.strptime(date_from, "%Y-%m-%d")
+        if date_to:
+            datetime.strptime(date_to, "%Y-%m-%d")
+        if date_from and date_to and date_from > date_to:
+            date_from = date_to = None
+    except ValueError:
+        date_from = date_to = None
+
+    summary = get_summary_stats(user_id, date_from, date_to)
+    transactions = [_format_transaction(item) for item in get_recent_transactions(user_id, date_from=date_from, date_to=date_to)]
+    raw_categories = get_category_breakdown(user_id, date_from, date_to)
     category_breakdown = [_format_category(item) for item in raw_categories]
     category_totals = {item["name"]: item["amount"] for item in raw_categories}
     profile_user = {
         **user,
         "initials": _initials(user["name"]),
     }
+
+    # helper to build detail string
+    def _detail_text(date_f, date_t):
+        if not date_f and not date_t:
+            return "All recorded expenses"
+        if date_f and date_t:
+            return f"From {date_f} to {date_t}"
+        if date_f:
+            return f"From {date_f}"
+        return f"Until {date_t}"
+
+    detail_text = _detail_text(date_from, date_to)
+
     summary_stats = [
         {
             "label": "Total spent",
             "value": _format_currency(summary["total_spent"]),
-            "detail": "All recorded expenses",
+            "detail": detail_text,
         },
         {
             "label": "Transactions",
             "value": str(summary["transaction_count"]),
-            "detail": "All recorded expenses",
+            "detail": detail_text,
         },
         {
             "label": "Top category",
@@ -171,11 +198,13 @@ def profile():
         summary_stats=summary_stats,
         transactions=transactions,
         category_breakdown=category_breakdown,
+        start_date=date_from,
+        end_date=date_to
     )
 
 
 def _format_currency(amount):
-    return f"₹{amount:,.2f}"
+    return f"₨{amount:,.2f}"
 
 
 def _initials(name):
