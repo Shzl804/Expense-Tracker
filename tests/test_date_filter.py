@@ -38,23 +38,23 @@ def client(database_path):
         yield test_client
 
 def test_profile_date_filter_range(client):
-    response = client.get("/profile?start_date=2026-01-01&end_date=2026-01-31")
+    response = client.get("/profile?date_from=2026-01-01&date_to=2026-01-31")
     page = response.get_data(as_text=True)
     assert response.status_code == 200
-    assert "₨300.00" in page
+    assert "₹300.00" in page
     assert "Early Jan" in page
     assert "Mid Jan" in page
     assert "Early Feb" not in page
 
 def test_profile_date_filter_invalid_dates(client):
-    response = client.get("/profile?start_date=not-a-date&end_date=2026-01-31")
+    response = client.get("/profile?date_from=not-a-date&date_to=2026-01-31")
     page = response.get_data(as_text=True)
     assert response.status_code == 200
     # Should fall back to unfiltered view
-    assert "₨600.00" in page or "Early Feb" in page
+    assert "₹600.00" in page or "Early Feb" in page
 
 def test_profile_date_filter_start_after_end(client):
-    response = client.get("/profile?start_date=2026-02-01&end_date=2026-01-01")
+    response = client.get("/profile?date_from=2026-02-01&date_to=2026-01-01")
     page = response.get_data(as_text=True)
     assert response.status_code == 200
     # Should fall back to unfiltered view

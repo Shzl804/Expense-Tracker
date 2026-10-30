@@ -34,12 +34,9 @@ def get_user_by_id(user_id):
 def _build_date_where_clause(user_id, date_from=None, date_to=None):
     where_clause = "WHERE user_id = ?"
     params = [user_id]
-    if date_from:
-        where_clause += " AND date >= ?"
-        params.append(date_from)
-    if date_to:
-        where_clause += " AND date <= ?"
-        params.append(date_to)
+    if date_from and date_to:
+        where_clause += " AND date BETWEEN ? AND ?"
+        params.extend((date_from, date_to))
     return where_clause, params
 
 
