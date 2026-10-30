@@ -1,9 +1,9 @@
 import os
 import secrets
 import sqlite3
-from datetime import datetime
+from datetime import date, datetime
 
-from flask import Flask, redirect, render_template, request, session, url_for
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from database.db import get_db, init_db, seed_db
@@ -123,6 +123,14 @@ def logout():
     return redirect(url_for("landing"))
 
 
+def _subtract_months(value, months):
+    month_index = value.year * 12 + value.month - 1 - months
+    year, month_index = divmod(month_index, 12)
+    month = month_index + 1
+    last_day = (date(year, month % 12 + 1, 1) - date.resolution).day if month != 12 else 31
+    return date(year, month, min(value.day, last_day))
+
+
 @app.route("/profile")
 def profile():
     user_id = session.get("user_id")
@@ -134,25 +142,71 @@ def profile():
         session.clear()
         return redirect(url_for("login"))
 
-    summary = get_summary_stats(user_id)
-    transactions = [_format_transaction(item) for item in get_recent_transactions(user_id)]
-    raw_categories = get_category_breakdown(user_id)
+    date_from = request.args.get("date_from")
+    date_to = request.args.get("date_to")
+
+    # A date filter is valid only when both bounds are present and well formed.
+    if not date_from or not date_to:
+        date_from = date_to = None
+    else:
+        try:
+            parsed_from = datetime.strptime(date_from, "%Y-%m-%d").date()
+            parsed_to = datetime.strptime(date_to, "%Y-%m-%d").date()
+        except ValueError:
+            date_from = date_to = None
+        else:
+            if parsed_from > parsed_to:
+                flash("Start date must be before end date.")
+                date_from = date_to = None
+
+    today = date.today()
+    preset_ranges = {
+        "this-month": (today.replace(day=1), today),
+        "last-3-months": (_subtract_months(today, 3), today),
+        "last-6-months": (_subtract_months(today, 6), today),
+    }
+    active_preset = next(
+        (
+            name
+            for name, (preset_from, preset_to) in preset_ranges.items()
+            if date_from == preset_from.isoformat() and date_to == preset_to.isoformat()
+        ),
+        "all-time" if not date_from and not date_to else None,
+    )
+    custom_range_active = bool(date_from and date_to and not active_preset)
+
+    summary = get_summary_stats(user_id, date_from, date_to)
+    transactions = [_format_transaction(item) for item in get_recent_transactions(user_id, date_from=date_from, date_to=date_to)]
+    raw_categories = get_category_breakdown(user_id, date_from, date_to)
     category_breakdown = [_format_category(item) for item in raw_categories]
     category_totals = {item["name"]: item["amount"] for item in raw_categories}
     profile_user = {
         **user,
         "initials": _initials(user["name"]),
     }
+
+    # helper to build detail string
+    def _detail_text(date_f, date_t):
+        if not date_f and not date_t:
+            return "All recorded expenses"
+        if date_f and date_t:
+            return f"From {date_f} to {date_t}"
+        if date_f:
+            return f"From {date_f}"
+        return f"Until {date_t}"
+
+    detail_text = _detail_text(date_from, date_to)
+
     summary_stats = [
         {
             "label": "Total spent",
             "value": _format_currency(summary["total_spent"]),
-            "detail": "All recorded expenses",
+            "detail": detail_text,
         },
         {
             "label": "Transactions",
             "value": str(summary["transaction_count"]),
-            "detail": "All recorded expenses",
+            "detail": detail_text,
         },
         {
             "label": "Top category",
@@ -171,6 +225,14 @@ def profile():
         summary_stats=summary_stats,
         transactions=transactions,
         category_breakdown=category_breakdown,
+        date_from=date_from,
+        date_to=date_to,
+        active_preset=active_preset,
+        custom_range_active=custom_range_active,
+        preset_ranges={
+            name: (preset_from.isoformat(), preset_to.isoformat())
+            for name, (preset_from, preset_to) in preset_ranges.items()
+        },
     )
 
 

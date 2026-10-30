@@ -31,29 +31,39 @@ def get_user_by_id(user_id):
     }
 
 
-def get_summary_stats(user_id):
+def _build_date_where_clause(user_id, date_from=None, date_to=None):
+    where_clause = "WHERE user_id = ?"
+    params = [user_id]
+    if date_from and date_to:
+        where_clause += " AND date BETWEEN ? AND ?"
+        params.extend((date_from, date_to))
+    return where_clause, params
+
+
+def get_summary_stats(user_id, date_from=None, date_to=None):
     """Return total spending, transaction count, and top category."""
+    where_clause, params = _build_date_where_clause(user_id, date_from, date_to)
     connection = get_db()
     try:
         totals = connection.execute(
-            """
+            f"""
             SELECT COALESCE(SUM(amount), 0) AS total_spent,
                    COUNT(*) AS transaction_count
             FROM expenses
-            WHERE user_id = ?
+            {where_clause}
             """,
-            (user_id,),
+            params,
         ).fetchone()
         top_category = connection.execute(
-            """
+            f"""
             SELECT category
             FROM expenses
-            WHERE user_id = ?
+            {where_clause}
             GROUP BY category
             ORDER BY SUM(amount) DESC, category ASC
             LIMIT 1
             """,
-            (user_id,),
+            params,
         ).fetchone()
     finally:
         connection.close()
@@ -65,22 +75,25 @@ def get_summary_stats(user_id):
     }
 
 
-def get_recent_transactions(user_id, limit=10):
+def get_recent_transactions(user_id, limit=10, date_from=None, date_to=None):
     """Return a user's most recent expenses, newest first."""
     if not isinstance(limit, int) or isinstance(limit, bool) or limit < 0:
         raise ValueError("limit must be a non-negative integer")
 
+    where_clause, params = _build_date_where_clause(user_id, date_from, date_to)
+    query_params = list(params) + [limit]
+
     connection = get_db()
     try:
         rows = connection.execute(
-            """
+            f"""
             SELECT date, description, category, amount
             FROM expenses
-            WHERE user_id = ?
+            {where_clause}
             ORDER BY date DESC, created_at DESC, id DESC
             LIMIT ?
             """,
-            (user_id, limit),
+            query_params,
         ).fetchall()
     finally:
         connection.close()
@@ -96,19 +109,21 @@ def get_recent_transactions(user_id, limit=10):
     ]
 
 
-def get_category_breakdown(user_id):
+def get_category_breakdown(user_id, date_from=None, date_to=None):
     """Return category totals and integer percentages summing to 100."""
+    where_clause, params = _build_date_where_clause(user_id, date_from, date_to)
+
     connection = get_db()
     try:
         rows = connection.execute(
-            """
+            f"""
             SELECT category AS name, SUM(amount) AS amount
             FROM expenses
-            WHERE user_id = ?
+            {where_clause}
             GROUP BY category
             ORDER BY amount DESC, name ASC
             """,
-            (user_id,),
+            params,
         ).fetchall()
     finally:
         connection.close()

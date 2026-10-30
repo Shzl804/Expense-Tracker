@@ -2,6 +2,10 @@
 
 {% block title %}Profile — Spendly{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+
 {% block content %}
 <section class="profile-page" aria-labelledby="profile-page-title">
     <div class="profile-container">
@@ -25,6 +29,25 @@
                 <span class="profile-meta-label">Member since</span>
                 <span class="profile-meta-value">{{ profile_user.member_since }}</span>
             </div>
+        </section>
+
+        <section class="profile-filter" aria-labelledby="filter-title">
+            <h2 class="sr-only" id="filter-title">Filter by date</h2>
+            <div class="profile-presets">
+                <span class="profile-presets-label">Quick select:</span>
+                <a href="{{ url_for('profile', date_from=preset_ranges['this-month'][0], date_to=preset_ranges['this-month'][1]) }}" class="preset-link {% if active_preset == 'this-month' %}active{% endif %}">This Month</a>
+                <a href="{{ url_for('profile', date_from=preset_ranges['last-3-months'][0], date_to=preset_ranges['last-3-months'][1]) }}" class="preset-link {% if active_preset == 'last-3-months' %}active{% endif %}">Last 3 Months</a>
+                <a href="{{ url_for('profile', date_from=preset_ranges['last-6-months'][0], date_to=preset_ranges['last-6-months'][1]) }}" class="preset-link {% if active_preset == 'last-6-months' %}active{% endif %}">Last 6 Months</a>
+                <a href="{{ url_for('profile') }}" class="preset-link {% if active_preset == 'all-time' %}active{% endif %}">All Time</a>
+            </div>
+            <form method="GET" action="{{ url_for('profile') }}" class="profile-filter-form {% if custom_range_active %}active{% endif %}">
+                <label for="date_from">From</label>
+                <input type="date" id="date_from" name="date_from" value="{{ date_from or '' }}">
+                <label for="date_to">To</label>
+                <input type="date" id="date_to" name="date_to" value="{{ date_to or '' }}">
+                <button type="submit">Apply</button>
+                <a href="{{ url_for('profile') }}" class="clear-link">Clear</a>
+            </form>
         </section>
 
         <section class="profile-stats" aria-label="Spending summary">
