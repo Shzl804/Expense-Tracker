@@ -11,10 +11,12 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from database.db import get_db, init_db, seed_db
 from database.queries import (
     get_category_breakdown,
+    get_expense_by_id,
     get_recent_transactions,
     get_summary_stats,
     get_user_by_id,
     insert_expense,
+    update_expense,
 )
 
 
@@ -395,9 +397,49 @@ def add_expense():
     return redirect(url_for("profile"))
 
 
-@app.route("/expenses/<int:id>/edit")
+@app.route("/expenses/<int:id>/edit", methods=["GET", "POST"])
 def edit_expense(id):
-    return "Edit expense — coming in Step 8"
+    user_id = session.get("user_id")
+    if not user_id or get_user_by_id(user_id) is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    expense = get_expense_by_id(id, user_id)
+    if expense is None:
+        abort(404)
+
+    if request.method == "GET":
+        return render_template(
+            "edit_expense.html",
+            expense=expense,
+            categories=EXPENSE_CATEGORIES,
+            amount=str(expense["amount"]),
+            category=expense["category"],
+            expense_date=expense["date"],
+            description=expense["description"] or "",
+        )
+
+    values, parsed_amount, error = _validate_expense_form(request.form)
+    if error:
+        return render_template(
+            "edit_expense.html",
+            expense={**expense, "amount": values["amount"], "category": values["category"],
+                     "date": values["expense_date"], "description": values["description"]},
+            categories=EXPENSE_CATEGORIES,
+            **values,
+            error=error,
+        )
+
+    update_expense(
+        id,
+        user_id,
+        parsed_amount,
+        values["category"],
+        values["expense_date"],
+        values["description"] or None,
+    )
+    flash("Expense updated successfully.")
+    return redirect(url_for("profile"))
 
 
 @app.route("/expenses/<int:id>/delete")

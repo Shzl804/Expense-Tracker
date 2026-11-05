@@ -87,7 +87,7 @@ def get_recent_transactions(user_id, limit=10, date_from=None, date_to=None):
     try:
         rows = connection.execute(
             f"""
-            SELECT date, description, category, amount
+            SELECT id, date, description, category, amount
             FROM expenses
             {where_clause}
             ORDER BY date DESC, created_at DESC, id DESC
@@ -100,6 +100,7 @@ def get_recent_transactions(user_id, limit=10, date_from=None, date_to=None):
 
     return [
         {
+            "id": row["id"],
             "date": row["date"],
             "description": row["description"] or "—",
             "category": row["category"],
@@ -143,6 +144,41 @@ def get_category_breakdown(user_id, date_from=None, date_to=None):
         {"name": row["name"], "amount": amount, "pct": pct}
         for row, amount, pct in zip(rows, amounts, percentages)
     ]
+
+
+def get_expense_by_id(expense_id, user_id):
+    """Return one expense owned by a user, or None when it is unavailable."""
+    connection = get_db()
+    try:
+        row = connection.execute(
+            """
+            SELECT id, user_id, amount, category, date, description
+            FROM expenses
+            WHERE id = ? AND user_id = ?
+            """,
+            (expense_id, user_id),
+        ).fetchone()
+    finally:
+        connection.close()
+
+    return dict(row) if row is not None else None
+
+
+def update_expense(expense_id, user_id, amount, category, date, description):
+    """Update an expense only when it belongs to the given user."""
+    connection = get_db()
+    try:
+        connection.execute(
+            """
+            UPDATE expenses
+            SET amount = ?, category = ?, date = ?, description = ?
+            WHERE id = ? AND user_id = ?
+            """,
+            (amount, category, date, description, expense_id, user_id),
+        )
+        connection.commit()
+    finally:
+        connection.close()
 
 
 def insert_expense(user_id, amount, category, date, description):

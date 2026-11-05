@@ -108,6 +108,7 @@ def test_get_recent_transactions_orders_newest_first_and_limits_results(users):
 
     assert [item["date"] for item in transactions] == ["2026-01-20", "2026-01-15"]
     assert transactions[0] == {
+        "id": 4,
         "date": "2026-01-20",
         "description": "Ride to work",
         "category": "Transport",
