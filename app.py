@@ -236,6 +236,19 @@ def profile():
     )
 
 
+@app.route("/analytics")
+def analytics():
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("login"))
+
+    if get_user_by_id(user_id) is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    return render_template("analytics.html")
+
+
 def _format_currency(amount):
     return f"₹{amount:,.2f}"
 
