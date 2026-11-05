@@ -23,6 +23,9 @@
                 <a href="{{ url_for('analytics') }}"
                    class="nav-analytics {% if request.endpoint == 'analytics' %}nav-active{% endif %}"
                    {% if request.endpoint == 'analytics' %}aria-current="page"{% endif %}>Analytics</a>
+                <a href="{{ url_for('add_expense') }}"
+                   class="{% if request.endpoint == 'add_expense' %}nav-active{% endif %}"
+                   {% if request.endpoint == 'add_expense' %}aria-current="page"{% endif %}>Add Expense</a>
                 <a href="{{ url_for('profile') }}" class="nav-profile">{{ session.get('user_name') }}</a>
                 <a href="{{ url_for('logout') }}">Log out</a>
                 {% else %}
