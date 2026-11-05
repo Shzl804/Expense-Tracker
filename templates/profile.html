@@ -67,7 +67,10 @@
                         <p class="profile-section-label">Recent activity</p>
                         <h2 class="profile-panel-title" id="transactions-title">Transaction history</h2>
                     </div>
-                    <span class="profile-panel-count">{{ transactions|length }} entries</span>
+                    <div>
+                        <a class="profile-header-link" href="{{ url_for('add_expense') }}">Add Expense</a>
+                        <span class="profile-panel-count">{{ transactions|length }} entries</span>
+                    </div>
                 </div>
                 <div class="profile-table-scroll">
                     <table class="profile-table">

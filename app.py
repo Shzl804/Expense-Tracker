@@ -1,9 +1,11 @@
+import hmac
+import math
 import os
 import secrets
 import sqlite3
 from datetime import date, datetime
 
-from flask import Flask, flash, redirect, render_template, request, session, url_for
+from flask import Flask, abort, flash, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from database.db import get_db, init_db, seed_db
@@ -12,11 +14,33 @@ from database.queries import (
     get_recent_transactions,
     get_summary_stats,
     get_user_by_id,
+    insert_expense,
 )
 
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SPENDLY_SECRET_KEY", secrets.token_hex(32))
+
+
+@app.context_processor
+def inject_csrf_token():
+    """Make a per-session CSRF token available to every form."""
+    if "csrf_token" not in session:
+        session["csrf_token"] = secrets.token_urlsafe(32)
+    return {"csrf_token": session["csrf_token"]}
+
+
+@app.before_request
+def protect_state_changing_requests():
+    """Reject state-changing requests without the session CSRF token."""
+    if request.method != "POST" or app.config.get("TESTING"):
+        return None
+
+    expected_token = session.get("csrf_token")
+    submitted_token = request.form.get("csrf_token", "")
+    if not expected_token or not hmac.compare_digest(expected_token, submitted_token):
+        abort(400, description="Invalid CSRF token.")
+    return None
 
 
 # ------------------------------------------------------------------ #
@@ -286,9 +310,89 @@ def _format_category(category):
     }
 
 
-@app.route("/expenses/add")
+EXPENSE_CATEGORIES = [
+    "Food",
+    "Transport",
+    "Bills",
+    "Health",
+    "Entertainment",
+    "Shopping",
+    "Other",
+]
+
+
+def _validate_expense_form(form):
+    """Return normalized values, parsed amount, and a validation error."""
+    amount = form.get("amount", "").strip()
+    category = form.get("category", "").strip()
+    expense_date = form.get("date", "").strip()
+    description = form.get("description", "").strip()
+    values = {
+        "amount": amount,
+        "category": category,
+        "expense_date": expense_date,
+        "description": description,
+    }
+
+    try:
+        parsed_amount = float(amount)
+    except (TypeError, ValueError):
+        parsed_amount = None
+
+    if not amount:
+        return values, None, "Enter an amount."
+    if parsed_amount is None or not math.isfinite(parsed_amount) or parsed_amount <= 0:
+        return values, None, "Amount must be a number greater than zero."
+    if category not in EXPENSE_CATEGORIES:
+        return values, None, "Choose a valid expense category."
+
+    try:
+        parsed_date = datetime.strptime(expense_date, "%Y-%m-%d").date()
+    except (TypeError, ValueError):
+        parsed_date = None
+    if parsed_date is None or parsed_date.isoformat() != expense_date:
+        return values, None, "Enter a valid date."
+    if len(description) > 200:
+        return values, None, "Description must be 200 characters or fewer."
+
+    return values, parsed_amount, None
+
+
+@app.route("/expenses/add", methods=["GET", "POST"])
 def add_expense():
-    return "Add expense — coming in Step 7"
+    user_id = session.get("user_id")
+    if not user_id or get_user_by_id(user_id) is None:
+        session.clear()
+        return redirect(url_for("login"))
+
+    if request.method == "GET":
+        return render_template(
+            "add_expense.html",
+            categories=EXPENSE_CATEGORIES,
+            amount="",
+            category="",
+            expense_date=date.today().isoformat(),
+            description="",
+        )
+
+    values, parsed_amount, error = _validate_expense_form(request.form)
+    if error:
+        return render_template(
+            "add_expense.html",
+            categories=EXPENSE_CATEGORIES,
+            **values,
+            error=error,
+        )
+
+    insert_expense(
+        user_id,
+        parsed_amount,
+        values["category"],
+        values["expense_date"],
+        values["description"] or None,
+    )
+    flash("Expense saved successfully.")
+    return redirect(url_for("profile"))
 
 
 @app.route("/expenses/<int:id>/edit")

@@ -145,6 +145,22 @@ def get_category_breakdown(user_id, date_from=None, date_to=None):
     ]
 
 
+def insert_expense(user_id, amount, category, date, description):
+    """Insert an expense for a user."""
+    connection = get_db()
+    try:
+        connection.execute(
+            """
+            INSERT INTO expenses (user_id, amount, category, date, description)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (user_id, amount, category, date, description),
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+
 def _parse_datetime(value):
     if not value:
         return None
